@@ -21,6 +21,10 @@ import { WelcomePageComponent } from './welcome-page/welcome-page.component';
 import { RouterModule, Routes } from '@angular/router';
 import { UserProfileComponent } from './user-profile/user-profile.component';
 
+/**
+ * Define application routes.
+ * @type {Routes}
+ */
 const appRoutes: Routes = [
   { path: 'welcome', component: WelcomePageComponent },
   { path: 'movies', component: MovieCardComponent },
@@ -28,6 +32,11 @@ const appRoutes: Routes = [
   { path: '', redirectTo: 'welcome', pathMatch: 'prefix' },
 ];
 
+/**
+ * Main module for the application.
+ * Configures the Angular module, imports dependencies, declares components,
+ * provides services, and bootstraps the main component.
+ */
 @NgModule({
   declarations: [
     AppComponent,

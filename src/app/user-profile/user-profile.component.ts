@@ -2,22 +2,41 @@ import { Component, OnInit } from '@angular/core';
 import { UserRegistrationService } from '../fetch-api-data.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
 
+/**
+ * UserProfileComponent - Manages and displays the user profile, including
+ * user data, favorite movies, and account settings.
+ */
 @Component({
   selector: 'app-user-profile',
   templateUrl: './user-profile.component.html',
   styleUrls: ['./user-profile.component.scss']
 })
 export class UserProfileComponent implements OnInit {
+  /**
+   * Stores user data including Username, Password, Email, and Birthday.
+   * @type {Object}
+   */
   userData: any = { 
     Username: '',
     Password: '',
     Email: '',
     Birthday: ''
   };
+
+  /**
+   * List of favorite movies associated with the user.
+   * @type {Array}
+   */
   favoriteMoviesList: any[] = [];
   
+  /**
+   * Injects required services for fetching user data, routing, and displaying snackbars.
+   * Initializes `userData` with stored user information from local storage.
+   * @param {UserRegistrationService} fetchApiData - Service for API calls.
+   * @param {Router} router - Service for navigation.
+   * @param {MatSnackBar} snackBar - Service for displaying feedback messages.
+   */
   constructor(
     public fetchApiData: UserRegistrationService,
     public router: Router,
@@ -37,6 +56,9 @@ export class UserProfileComponent implements OnInit {
     this.getFavoriteMovies();
   }
 
+  /**
+   * Fetches user data from the API and updates `userData` and `favoriteMoviesList`.
+   */
   getUser(): void {
     this.fetchApiData.getUser(this.userData.Username).subscribe(
       (response: any) => {
@@ -52,6 +74,10 @@ export class UserProfileComponent implements OnInit {
     );
   }
 
+  /**
+   * Updates the user data on the server with the current `userData`.
+   * Updates local storage with the latest user data upon success.
+   */
   editUser(): void {
     this.fetchApiData.editUser(this.userData).subscribe(
       (resp: any) => {
@@ -66,12 +92,19 @@ export class UserProfileComponent implements OnInit {
     );
   }
 
+  /**
+   * Fetches the user's favorite movies from the API and stores them in `favoriteMoviesList`.
+   */
   getFavoriteMovies(): void {
     this.fetchApiData.getFavoriteMovies().subscribe((movies: any[]) => {
       this.favoriteMoviesList = movies; // Store the favorite movies
     });
   }
 
+  /**
+   * Adds or removes a movie from the user's favorites.
+   * @param {string} movieId - The ID of the movie to add or remove.
+   */
   handleFavoriteToggle(movieId: string): void {
     const isFavorite = this.favoriteMoviesList.some((movie) => movie.id === movieId);
     if (isFavorite) {
@@ -87,6 +120,9 @@ export class UserProfileComponent implements OnInit {
     }
   }
 
+  /**
+   * Deletes the user's account and logs them out.
+   */
   deleteUser(): void {
     const username = this.userData.Username;
     this.fetchApiData.deleteUser(username).subscribe(
@@ -101,6 +137,10 @@ export class UserProfileComponent implements OnInit {
     );
   }
   
+  /**
+   * Logs out the user, clears local storage, and navigates to the welcome page.
+   * Displays a confirmation message upon success.
+   */
   logoutUser(): void {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
@@ -108,6 +148,9 @@ export class UserProfileComponent implements OnInit {
     this.snackBar.open('Account deleted successfully. You have been logged out.', 'OK', { duration: 3000 });
   }
 
+  /**
+   * Navigates to the movies page.
+   */
   allMovies(): void {
     this.router.navigate(['movies']);
   }

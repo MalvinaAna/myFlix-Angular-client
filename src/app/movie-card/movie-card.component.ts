@@ -5,16 +5,33 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { ChangeDetectorRef } from '@angular/core';
 
+/**
+ * MovieCardComponent - Displays a list of movies with options to add or remove from favorites.
+ * Allows users to view all movies or filter to show only their favorite movies.
+ */
 @Component({
   selector: 'app-movie-card',
   templateUrl: './movie-card.component.html',
   styleUrls: ['./movie-card.component.scss']
 })
 export class MovieCardComponent implements OnInit {
+  /**
+   * Array of movies retrieved from the backend API.
+   * @type {Array}
+   */
   movies: any[] = [];
+
   showFavoritesOnly = false; // Toggle for "My Favorites" filter
   filteredMovies: any[] = []; // Array for filtered movies based on favorites
 
+  /**
+   * Injects required services for fetching movies, displaying snackbars, routing, and opening dialogs.
+   * @param {UserRegistrationService} fetchApiData - Service for API calls.
+   * @param {MatSnackBar} snackBar - Service for displaying feedback messages.
+   * @param {Router} router - Service for navigation.
+   * @param {MatDialog} dialog - Service for opening dialogs.
+   * @param {ChangeDetectorRef} cdr - Service to detect changes in the component.
+   */
   constructor(
     public fetchApiData: UserRegistrationService,
     private snackBar: MatSnackBar,
@@ -27,6 +44,9 @@ export class MovieCardComponent implements OnInit {
     this.getMovies();
   }
 
+  /**
+   * Fetches the list of all movies from the API and applies the favorites filter.
+   */
   getMovies(): void {
     this.fetchApiData.getAllMovies().subscribe((resp: any) => {
       this.movies = resp;
@@ -34,13 +54,18 @@ export class MovieCardComponent implements OnInit {
     });
   }
 
-  // Toggle to filter between all movies and favorite movies
+  /**
+   * Toggles the view to show either all movies or only the user's favorite movies.
+   * Reapplies the filter based on the current toggle setting.
+   */
   toggleFavoritesFilter(): void {
     this.showFavoritesOnly = !this.showFavoritesOnly;
     this.applyFilter(); // Reapply filter on toggle
   }
 
-  // Apply the filter to show either all movies or only favorites
+  /**
+   * Applies the filter to display either all movies or only those marked as favorites.
+   */
   applyFilter(): void {
     if (this.showFavoritesOnly) {
       const userFavorites = JSON.parse(localStorage.getItem('user') || '{}').FavoriteMovies || [];
@@ -50,6 +75,12 @@ export class MovieCardComponent implements OnInit {
     }
   }
 
+  /**
+   * Opens a dialog to display detailed information about a movie.
+   * @param {string} title - The title of the dialog.
+   * @param {string} name - The name associated with the content, like director or genre.
+   * @param {string} content - The content to be displayed in the dialog.
+   */
   openDialog(title: string, name: string, content: string): void {
     this.dialog.open(GenericDialog, {
       width: '600px', // Set a larger width for the modal
@@ -58,6 +89,10 @@ export class MovieCardComponent implements OnInit {
     });
   }
 
+  /**
+   * Adds a movie to the user's list of favorite movies, updates local storage, and re-applies the filter.
+   * @param {string} movieId - The ID of the movie to add to favorites.
+   */
   addToFavorites(movieId: string): void {
     this.fetchApiData.addFavoriteMovie(movieId).subscribe(() => {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -69,7 +104,11 @@ export class MovieCardComponent implements OnInit {
       this.cdr.detectChanges(); // Trigger change detection
     });
   }
-  
+
+  /**
+   * Removes a movie from the user's list of favorite movies, updates local storage, and re-applies the filter.
+   * @param {string} movieId - The ID of the movie to remove from favorites.
+   */  
   removeFromFavorites(movieId: string): void {
     this.fetchApiData.deleteFavoriteMovie(movieId).subscribe(() => {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -82,16 +121,27 @@ export class MovieCardComponent implements OnInit {
     });
   }
 
+  /**
+   * Checks if a movie is in the user's list of favorite movies.
+   * @param {string} movieId - The ID of the movie to check.
+   * @returns {boolean} - Returns true if the movie is a favorite, false otherwise.
+   */
   isFavorite(movieId: string): boolean {
     const userFavorites = JSON.parse(localStorage.getItem('user') || '{}').FavoriteMovies || [];
     return userFavorites.includes(movieId);
   }
 
+  /**
+   * Navigates the user to their profile page.
+   */
   myProfile(): void {
     this.router.navigate(['profile']);
   }
 }
 
+/**
+ * GenericDialog - A reusable dialog component for displaying additional information about a movie.
+ */
 @Component({
   selector: 'generic-dialog',
   template: `
@@ -154,6 +204,14 @@ export class MovieCardComponent implements OnInit {
   `]
 })
 export class GenericDialog {
+  /**
+   * Injects MatDialogRef to control dialog state and MAT_DIALOG_DATA to access the dialog's input data.
+   * @param {MatDialogRef<GenericDialog>} dialogRef - Reference to the current dialog instance.
+   * @param {Object} data - Data passed to the dialog.
+   * @param {string} data.title - Title of the dialog.
+   * @param {string} [data.name] - Optional name associated with the dialog content.
+   * @param {string} data.content - Content to display in the dialog.
+   */
   constructor(
     public dialogRef: MatDialogRef<GenericDialog>,
     @Inject(MAT_DIALOG_DATA) public data: { title: string; name?: string; content: string }
