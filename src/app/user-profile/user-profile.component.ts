@@ -89,18 +89,23 @@ export class UserProfileComponent implements OnInit {
 
   deleteUser(): void {
     const username = this.userData.Username;
-    this.fetchApiData.deleteUser(username).subscribe((resp: any) => {
-      console.log(resp);
-      this.logoutUser();
-    }, (error) => {
-      console.error('Error deleting user:', error);
-    });
+    this.fetchApiData.deleteUser(username).subscribe(
+      (resp: any) => {
+        console.log('User deleted successfully:', resp);
+        this.logoutUser(); // Automatically log out after deletion
+      },
+      (error) => {
+        console.error('Error deleting user:', error);
+        this.snackBar.open('Error deleting account. Please try again later.', 'OK', { duration: 3000 });
+      }
+    );
   }
-
+  
   logoutUser(): void {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     this.router.navigate(['welcome']);
+    this.snackBar.open('Account deleted successfully. You have been logged out.', 'OK', { duration: 3000 });
   }
 
   allMovies(): void {

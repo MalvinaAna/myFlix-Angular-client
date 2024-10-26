@@ -1,0 +1,19 @@
+.main-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centers horizontally */
+  justify-content: center; /* Centers vertically */
+  height: 100vh; /* Full viewport height */
+  text-align: center; /* Centers text in each element */
+}
+
+.button-container {
+  display: flex;
+  gap: 10px; /* Adds space between buttons */
+}
+
+@media (max-width: 600px) {
+  .sidebar {
+    display: none;
+  }
+}

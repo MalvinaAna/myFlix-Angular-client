@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { catchError } from 'rxjs/operators';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { tap, catchError } from 'rxjs/operators';
 
 // Declaring the API URL that will provide data for the client app
 const apiUrl = 'https://my-movieflix-e95b2c0e9dda.herokuapp.com/';
@@ -170,13 +170,23 @@ public editUser(userDetails: any): Observable<any> {
 
 public deleteUser(username: string): Observable<any> {
   const token = localStorage.getItem('token');
-  return this.http.delete(apiUrl + `users/${username}`, {
+  return this.http.delete(`${apiUrl}users/${username}`, {
     headers: new HttpHeaders({
-      Authorization: 'Bearer ' + token,
-    })
+      Authorization: `Bearer ${token}`
+    }),
+    responseType: 'text' // Expect text response to handle plain string messages from the server
   }).pipe(
-    map(this.extractResponseData),
-    catchError(this.handleError)
+    tap(response => {
+      console.log('User deleted successfully:', response);
+    }),
+    catchError((error) => {
+      console.error('Error deleting user:', error);
+      // Customize the error message based on known scenarios
+      const errorMessage = error.status === 200 
+        ? 'Unexpected response format; check API response structure.' 
+        : 'Something went wrong; please try again later.';
+      return throwError(() => new Error(errorMessage));
+    })
   );
 }
 
@@ -216,4 +226,3 @@ public deleteFavoriteMovie(movieId: string): Observable<any> {
     );
   }
 }
-

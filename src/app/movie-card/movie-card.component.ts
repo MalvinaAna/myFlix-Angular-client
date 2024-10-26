@@ -3,6 +3,7 @@ import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dial
 import { UserRegistrationService } from '../fetch-api-data.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-movie-card',
@@ -11,12 +12,15 @@ import { Router } from '@angular/router';
 })
 export class MovieCardComponent implements OnInit {
   movies: any[] = [];
+  showFavoritesOnly = false; // Toggle for "My Favorites" filter
+  filteredMovies: any[] = []; // Array for filtered movies based on favorites
 
   constructor(
     public fetchApiData: UserRegistrationService,
     private snackBar: MatSnackBar,
     private router: Router,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -26,7 +30,24 @@ export class MovieCardComponent implements OnInit {
   getMovies(): void {
     this.fetchApiData.getAllMovies().subscribe((resp: any) => {
       this.movies = resp;
+      this.applyFilter(); // Apply the filter based on the current toggle setting
     });
+  }
+
+  // Toggle to filter between all movies and favorite movies
+  toggleFavoritesFilter(): void {
+    this.showFavoritesOnly = !this.showFavoritesOnly;
+    this.applyFilter(); // Reapply filter on toggle
+  }
+
+  // Apply the filter to show either all movies or only favorites
+  applyFilter(): void {
+    if (this.showFavoritesOnly) {
+      const userFavorites = JSON.parse(localStorage.getItem('user') || '{}').FavoriteMovies || [];
+      this.filteredMovies = this.movies.filter(movie => userFavorites.includes(movie._id));
+    } else {
+      this.filteredMovies = this.movies;
+    }
   }
 
   openDialog(title: string, name: string, content: string): void {
@@ -37,17 +58,27 @@ export class MovieCardComponent implements OnInit {
     });
   }
 
-  addToFavorites(movieTitle: string): void {
-    this.fetchApiData.addFavoriteMovie(movieTitle).subscribe(() => {
-      this.getMovies();
+  addToFavorites(movieId: string): void {
+    this.fetchApiData.addFavoriteMovie(movieId).subscribe(() => {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      user.FavoriteMovies = [...(user.FavoriteMovies || []), movieId]; // Update favorite movies
+      localStorage.setItem('user', JSON.stringify(user)); // Save updated user data in localStorage
+  
       this.snackBar.open("Movie added to favorites", 'OK', { duration: 2000 });
+      this.applyFilter(); // Reapply filter after updating favorites
+      this.cdr.detectChanges(); // Trigger change detection
     });
   }
-
-  removeFromFavorites(movieTitle: string): void {
-    this.fetchApiData.deleteFavoriteMovie(movieTitle).subscribe(() => {
-      this.getMovies();
+  
+  removeFromFavorites(movieId: string): void {
+    this.fetchApiData.deleteFavoriteMovie(movieId).subscribe(() => {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      user.FavoriteMovies = (user.FavoriteMovies || []).filter((id: string) => id !== movieId); // Remove movie from favorites
+      localStorage.setItem('user', JSON.stringify(user)); // Save updated user data in localStorage
+  
       this.snackBar.open("Movie removed from favorites", 'OK', { duration: 2000 });
+      this.applyFilter(); // Reapply filter after updating favorites
+      this.cdr.detectChanges(); // Trigger change detection
     });
   }
 
